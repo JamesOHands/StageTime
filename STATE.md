@@ -7,7 +7,7 @@ _Last updated: 22 Nov 2026 by Claude_
 - Repo `JamesOHands/StageTime`, Pages from `main` / root, live at https://jamesohands.github.io/StageTime/ (landing page only).
 - Docs: AGENTS.md, CLAUDE.md, README.md, SPEC.md, STATE.md, DECISIONS.md, TEST_LOG.md.
 - **SPEC.md (v0) is ready for sign-off.** It includes ChatGPT/Codex's review. It becomes Agreed once James says so.
-- Claude and ChatGPT/Codex can both read the repo. ChatGPT/Codex has confirmed it can push. Claude's push access is being confirmed.
+- Claude and ChatGPT/Codex can both read from and push to the repo.
 - Hardware: M1 MacBook Pro. Quest 2 may not work. Quest 3/3S is the likely replacement. Not yet confirmed which headset will be used for testing.
 
 ## Next steps
