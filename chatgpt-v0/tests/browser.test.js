@@ -137,6 +137,7 @@ try {
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   const { page, errors } = await openPage(context);
   await ready(page, '?seed=stage-v0-test&mode=manual&minutes=1');
+  assert.equal(await getData(page, 'renderMode'), 'webgl', 'Full browser suite requires WebGL2; compatibility view is not WebGL acceptance');
   const originalSeats = await getData(page, 'occupied');
   assert.equal(originalSeats.split(',').length, 20);
   await shot(page, 'entry');

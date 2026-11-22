@@ -14,6 +14,8 @@ The Back Room is the presence prototype defined in the agreed root [SPEC.md](../
 
 The desktop button enters the same scene at an eye height of 1.7 m. Click/drag the room to look around; Esc releases the mouse. Space starts/stops the set. On-screen controls are also available.
 
+If a desktop browser cannot create a WebGL2 context, a clearly labelled Canvas2D compatibility view projects the same scene and animated poses at a lower frame rate. This is only a desktop functional preview; it does not qualify as the WebGL or headset presence test. Enter VR remains disabled in that environment.
+
 | Action | Quest | Desktop |
 |---|---|---|
 | Start/stop | Hold right thumbstick 1 s | Space |

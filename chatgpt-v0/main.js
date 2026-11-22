@@ -11,6 +11,7 @@ import { StageAudio } from './src/audio.js';
 import { Room } from './src/render/room.js';
 import { Audience } from './src/render/audience.js';
 import { FrameStats, Overlay } from './src/render/overlay.js';
+import { CompatibilityPreview } from './src/render/compatibility.js';
 import { DesktopInput } from './src/input/desktop.js';
 import { XRInput } from './src/input/xr.js';
 
@@ -61,16 +62,27 @@ const speech = new SpeechDetector(bus);
 const audio = new StageAudio(notify);
 const mic = new MicCapture(message => fallbackToTimed(message));
 
-const renderer = new THREE.WebGLRenderer({
-  canvas, antialias: true, alpha: false, powerPreference: 'high-performance',
-});
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.06;
+// Three r187 requires WebGL2. A browser with graphics explicitly disabled
+// can still run a labelled, simplified desktop view of the same scene.
+const gl = canvas.getContext('webgl2', { antialias: true, alpha: false, powerPreference: 'high-performance' });
+const webgl = gl ? new THREE.WebGLRenderer({
+  canvas, context: gl, antialias: true, alpha: false, powerPreference: 'high-performance',
+}) : null;
+const renderer = webgl ?? new CompatibilityPreview(canvas);
+const compatibility = renderer instanceof CompatibilityPreview ? renderer : null;
+if (webgl) {
+  webgl.outputColorSpace = THREE.SRGBColorSpace;
+  webgl.toneMapping = THREE.ACESFilmicToneMapping;
+  webgl.toneMappingExposure = 1.06;
+  webgl.xr.enabled = true;
+  webgl.xr.setReferenceSpaceType('local-floor');
+  webgl.xr.setFramebufferScaleFactor(1);
+} else {
+  const label = document.querySelector('.preview-label');
+  if (label) label.textContent = '2D COMPATIBILITY PREVIEW';
+}
+document.body.dataset.renderMode = webgl ? 'webgl' : 'compatibility';
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
-renderer.xr.enabled = true;
-renderer.xr.setReferenceSpaceType('local-floor');
-renderer.xr.setFramebufferScaleFactor(1);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x231a16);
 const camera = new THREE.PerspectiveCamera(63, innerWidth / Math.max(1, innerHeight), 0.025, 35);
@@ -150,7 +162,7 @@ function setView(next) {
 }
 
 function resize() {
-  if (renderer.xr.isPresenting) return;
+  if (webgl?.xr.isPresenting) return;
   camera.aspect = innerWidth / Math.max(1, innerHeight);
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight, false);
@@ -243,6 +255,7 @@ function setLightingFromForm() {
   settings.house = clamp(Number(form.house.value) / 100, 0, 1);
   settings.spotlight = clamp(Number(form.spot.value) / 100, 0, 1);
   room.setLighting(settings.house, settings.spotlight);
+  if (compatibility) compatibility.house = settings.house;
   el('house-value').textContent = Math.round(settings.house * 100) + '%';
   el('spotlight-value').textContent = Math.round(settings.spotlight * 100) + '%';
 }
@@ -351,7 +364,7 @@ startDesktopButton.addEventListener('click', () => {
 });
 
 enterVRButton.addEventListener('click', async () => {
-  if (view !== 'entry' || !xrSupported || !navigator.xr) return;
+  if (view !== 'entry' || !xrSupported || !navigator.xr || !webgl) return;
   const token = prepareEntry();
   try {
     // Request the immersive session immediately from the same user gesture.
@@ -366,9 +379,9 @@ enterVRButton.addEventListener('click', async () => {
       if (active.visibilityState === 'hidden' && xrSession === active) void leaveStage('VR was hidden; session stopped.');
     });
     beginStage('xr');
-    await renderer.xr.setSession(active);
+    await webgl.xr.setSession(active);
     if (xrSession === active) {
-      try { renderer.xr.setFoveation(1); } catch { /* Device may not expose fixed foveation. */ }
+      try { webgl.xr.setFoveation(1); } catch { /* Device may not expose fixed foveation. */ }
     }
   } catch (error) {
     if (token !== enterGeneration && view === 'entry') return;
@@ -406,7 +419,7 @@ function returnToSetup() {
   frames.reset();
   setView('entry');
   resize();
-  setupStatus.textContent = xrSupported ? 'Ready · immersive VR available' : 'Ready · desktop preview (VR needs a compatible headset browser)';
+  showAvailability();
 }
 
 /** @param {XRSession} ended */
@@ -429,7 +442,7 @@ async function leaveStage(message = '') {
       await ending.end();
     } catch (error) {
       // A system-initiated end can race with our explicit exit.
-      if (xrSession === ending && renderer.xr.isPresenting) {
+      if (xrSession === ending && webgl?.xr.isPresenting) {
         exiting = false;
         notify(errorMessage(error, 'VR exit failed. Use the system button'));
         return;
@@ -539,9 +552,10 @@ function updateHud(now, force = false) {
   el('hud-time').hidden = !settings.countdown;
   el('hud-state-text').textContent = state.toUpperCase();
   el('hud-mode').textContent = mode.toUpperCase();
-  el('hud-prompt').textContent = state === 'running' ? 'The stage is yours. Space stops the set.'
+  const prompt = state === 'running' ? 'The stage is yours. Space stops the set.'
     : state === 'finished' ? 'Set complete. Press Space to start again.'
     : 'Press Space when you are ready.';
+  el('hud-prompt').textContent = prompt + (compatibility ? ' · 2D compatibility view' : '');
   const startButton = button('desktop-start-stop');
   if (startButton.dataset.state !== state) {
     startButton.dataset.state = state;
@@ -554,7 +568,7 @@ function updateHud(now, force = false) {
 /** @param {XRFrame | undefined} frame */
 function updateViewer(frame) {
   if (xrSession && frame) {
-    const reference = renderer.xr.getReferenceSpace();
+    const reference = webgl?.xr.getReferenceSpace();
     const pose = reference && frame.getViewerPose(reference);
     if (pose) {
       const p = pose.transform.position, q = pose.transform.orientation;
@@ -600,6 +614,7 @@ function updateEmitters(now) {
 }
 
 function targetRate() {
+  if (compatibility) return '2D preview';
   if (!xrSession) return 'desktop';
   const rate = /** @type {XRSession & {frameRate?:number}} */ (xrSession).frameRate;
   return Number.isFinite(rate) ? String(Math.round(rate || CONFIG.targetFps)) + ' Hz' : CONFIG.targetFps + '+ target';
@@ -674,12 +689,17 @@ function animate(_timestamp, frame) {
 
 async function checkVR() {
   try {
-    xrSupported = Boolean(navigator.xr && await navigator.xr.isSessionSupported('immersive-vr'));
+    xrSupported = Boolean(webgl && navigator.xr && await navigator.xr.isSessionSupported('immersive-vr'));
   } catch { xrSupported = false; }
-  setupStatus.textContent = xrSupported
-    ? 'Ready · immersive VR available'
-    : 'Ready · desktop preview. Enter VR requires a compatible headset browser.';
+  showAvailability();
   updateButtons();
+}
+
+function showAvailability() {
+  setupStatus.textContent = compatibility
+    ? 'WebGL2 unavailable · simplified 2D desktop view. VR requires WebGL2 and a compatible headset.'
+    : xrSupported ? 'Ready · immersive VR available'
+    : 'Ready · desktop preview. Enter VR requires a compatible headset browser.';
 }
 
 window.addEventListener('error', event => notify('Error: ' + event.message.slice(0, 170)));
