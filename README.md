@@ -7,7 +7,7 @@ A VR stand-up crowd simulator: a private rehearsal tool for getting used to bein
 | Build | URL | Status |
 |---|---|---|
 | Claude v0 | https://jamesohands.github.io/StageTime/claude-v0/ | Ready for headset test (22 Nov 2026) — see `claude-v0/README.md` |
-| ChatGPT v0 | https://jamesohands.github.io/StageTime/chatgpt-v0/ | Not built yet |
+| ChatGPT v0 | https://jamesohands.github.io/StageTime/chatgpt-v0/ | Ready for headset trial (22 Nov 2026) — desktop compatibility tested; see `chatgpt-v0/README.md` |
 
 ## What's in this repo
 

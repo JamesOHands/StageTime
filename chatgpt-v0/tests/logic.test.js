@@ -10,6 +10,7 @@ import { SpeechDetector } from '../src/speech.js';
 import { stream } from '../src/rng.js';
 import { XRInput } from '../src/input/xr.js';
 import { Audience } from '../src/render/audience.js';
+import { MicCapture } from '../src/mic.js';
 
 test('query settings are bounded; default session is five minutes and 20 seats', () => {
   const defaults = settingsFromQuery('?seed=demo');
@@ -247,4 +248,65 @@ test('controller input mapping (synthetic Quest layout): edges, hold-to-start, v
   input.poll(xr, 2300); input.poll(xr, 3299); assert.ok(!events.includes('exit'));
   input.poll(xr, 3300); input.poll(xr, 4300);
   assert.deepEqual(events, ['laugh', 'titter', 'applause', 'cough', 'debug', 'session', 'volume-up', 'volume-down', 'exit']);
+});
+
+test('synthetic microphone adapter: explicit stop, permission rejection and late permission cleanup', async () => {
+  class Track extends EventTarget {
+    constructor() {
+      super();
+      /** @type {MediaStreamTrackState} */
+      this.readyState = 'live';
+      this.stopCount = 0;
+    }
+    stop() { this.readyState = 'ended'; this.stopCount++; }
+  }
+  /** @param {Track} track */
+  const makeStream = track => /** @type {MediaStream} */ (/** @type {unknown} */ ({
+    getTracks: () => [track], getAudioTracks: () => [track],
+  }));
+  let disconnected = 0;
+  const context = /** @type {AudioContext} */ (/** @type {unknown} */ ({
+    createMediaStreamSource: () => ({ connect() {}, disconnect() { disconnected++; } }),
+    createAnalyser: () => ({
+      fftSize: 1024, smoothingTimeConstant: 0,
+      /** @param {Float32Array} data */
+      getFloatTimeDomainData(data) { for (let i = 0; i < data.length; i++) data[i] = i % 2 ? 0.11 : -0.11; },
+      disconnect() { disconnected++; },
+    }),
+  }));
+  const descriptor = Object.getOwnPropertyDescriptor(navigator, 'mediaDevices');
+  /** @param {() => Promise<MediaStream>} getUserMedia */
+  const setMedia = getUserMedia => Object.defineProperty(navigator, 'mediaDevices', {
+    value: { getUserMedia }, configurable: true,
+  });
+  try {
+    const mic = new MicCapture(() => {});
+    const first = new Track();
+    setMedia(async () => makeStream(first));
+    assert.equal(await mic.start(context), true);
+    assert.equal(mic.active, true);
+    assert.ok(mic.readLevel() > .10);
+    mic.stop();
+    assert.equal(first.readyState, 'ended');
+    assert.equal(first.stopCount, 1);
+    assert.equal(disconnected, 2);
+    assert.equal(mic.active, false);
+    setMedia(async () => { throw new DOMException('Denied in test', 'NotAllowedError'); });
+    await assert.rejects(mic.start(context), { name: 'NotAllowedError' });
+    assert.equal(mic.active, false);
+    const late = new Track();
+    /** @type {(value:MediaStream) => void} */
+    let resolvePermission = () => {};
+    setMedia(() => new Promise(resolve => { resolvePermission = resolve; }));
+    const pending = mic.start(context);
+    assert.equal(mic.pending, true);
+    mic.stop();
+    resolvePermission(makeStream(late));
+    assert.equal(await pending, false);
+    assert.equal(late.readyState, 'ended');
+    assert.equal(mic.active, false);
+  } finally {
+    if (descriptor) Object.defineProperty(navigator, 'mediaDevices', descriptor);
+    else Reflect.deleteProperty(navigator, 'mediaDevices');
+  }
 });

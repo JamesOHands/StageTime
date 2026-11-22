@@ -16,6 +16,9 @@ Test IDs refer to the acceptance tests in SPEC.md.
 | 22 Nov 2026 | claude-v0 | eeaaf7b | Desktop / assistant | Node 22 | D3, D4, D8 (23 unit tests) | Pass | Claude |
 | 22 Nov 2026 | claude-v0 | eeaaf7b | Desktop / assistant | Headless Chrome (software WebGL), fake mic | D1, D2, D3, D4 (incl. full 1-min set), D5, D7, D9; draw-call budget | Pass (24/24) | Claude |
 | 22 Nov 2026 | claude-v0 | eeaaf7b | Desktop / assistant | TypeScript 5, strict | D6 type check | Pass | Claude |
+| 22 Nov 2026 | chatgpt-v0 | 90c532d | Desktop / assistant | Node 24, TypeScript 5.9 | D3, D4 (logic), D6, D8; synthetic controller/mic and geometry | Pass (11/11 tests + strict type check) | ChatGPT/Codex |
+| 22 Nov 2026 | chatgpt-v0 | 90c532d | Desktop / assistant | Live cloud Chrome, WebGL disabled | Desktop compatibility controls, D4 timer/stop, D5 mic-off fallback, D7 scheduled placeholder audio | Compatibility checks passed; native WebGL not verified | ChatGPT/Codex |
+| 22 Nov 2026 | chatgpt-v0 | 90c532d | Desktop / assistant | Local Chromium | Full WebGL browser suite, D9 actual fake-device tracks | Pending: browser process launch blocked by environment | ChatGPT/Codex |
 
 ## Headset session template
 
@@ -67,3 +70,13 @@ Not a headset test. This proves the code runs, nothing about presence or headset
   - a missing sound library falls back to placeholders.
 - **Render budget:** 51 draw calls, 23k triangles with 20 people.
 - **Frame rate:** not meaningful here (software rendering).
+
+### 2026-11-22 — chatgpt-v0 @ 90c532d — desktop / assistant (ChatGPT/Codex)
+
+Not a headset test. No real microphone access or private rehearsal material used.
+
+- **Type check:** `npm run check` (strict checkJs, noEmit) passed.
+- **11 Node tests:** 30 physical seats, seed/fill/appearance repeatability, independent PRNG streams, identical logical reaction timeline at 14 ms and 781 ms frame intervals, reaction distributions and staggered participants, attention, conservative instanced audience geometry budget, monotonic session start/finish/stop, one pause/one outcome, fresh speech/cooldown/echo guard, synthetic Quest handedness/button hold mapping, and synthetic mic stop/denial/late permission cleanup.
+- **Live Pages test (labelled Canvas2D compatibility view):** the cloud browser reported GL_VENDOR / GL_RENDERER disabled; this is not a native WebGL performance test. The assistant verified the deployed setup at the default 20 seats and five minutes, a deterministic test seed, camera look-around, D/L/T/R/P/C/Space/+/- controls and overlay, reaction source scheduling up to the 24-voice cap, stop clearing voices and timer returning to 1:00, a full one-minute countdown naturally reaching 0:00 and scheduling finish applause, and a mic mode request without enabling mic falling back to timed mode. Seed `pub-demo` produced the expected timed laugh around 19 seconds (14 scheduled voices); exit returned to setup with zero reaction voices. No new app runtime errors in the compatibility test. Sound direction/quality was not judged.
+- **Geometry estimate only:** 16 scene batches, 50,262 source triangles for the 20-member test seed (not measured GPU draw calls). The unit geometry test passed at 30 occupied seats in five seeds. Compatibility FPS is intentionally not compared to headset FPS.
+- **Pending:** full D1 native WebGL verification and actual browser permission-denial/fake-device D9 tests; runnable Playwright suite is in the build folder but the local Chromium process could not launch under the environment's socket restrictions. D5 rejection and D9 track cleanup were validated synthetically. All H1–H7 pending James's headset test.
