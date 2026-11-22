@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#191513">
+  <meta name="description" content="Stage Time is a private-on-device stand-up rehearsal prototype: a small virtual pub crowd, five minutes, and your material.">
+  <title>Stage Time · The Back Room | ChatGPT v0</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='13' fill='%231a1917'/%3E%3Cpath d='M22 12h20v8H22zM26 20h12l7 30H19z' fill='%23ddb47c'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body data-view="entry" data-state="ready" data-mode="timed">
+  <canvas id="scene" tabindex="0" aria-label="The Back Room, a three-dimensional pub comedy room viewed from the stage"></canvas>
+  <div id="setup-backdrop" aria-hidden="true"></div>
+
+  <main id="setup" class="setup-layout">
+    <section class="setup-card" aria-labelledby="title">
+      <header class="brand">
+        <span class="brand-mark" aria-hidden="true"><span></span></span>
+        <div><span class="wordmark">STAGE TIME</span><span class="prototyping">Presence prototype · ChatGPT v0</span></div>
+        <span class="version-pill">V0</span>
+      </header>
+      <div class="intro">
+        <p class="eyebrow"><span class="status-dot"></span> VENUE 01 / THE BACK ROOM</p>
+        <h1 id="title">Your stage.<br><em>Five minutes.</em></h1>
+        <p>A small pub crowd, ready when you are. Practise being watched, starting and carrying on. Reactions are simulated, never a judgement of your jokes.</p>
+      </div>
+
+      <div class="setup-fields">
+        <div class="field mode-field">
+          <label for="reaction-mode">Audience reactions</label>
+          <select id="reaction-mode">
+            <option value="timed">Timed · unpredictable reactions</option>
+            <option value="mic">Microphone · listen for pauses</option>
+            <option value="manual">Manual · you trigger reactions</option>
+          </select>
+        </div>
+        <div class="mic-row">
+          <button id="mic-toggle" type="button" class="subtle-button" disabled>Enable microphone</button>
+          <span id="mic-status" class="field-help" role="status">Off · no recording</span>
+        </div>
+        <div class="slider-field">
+          <div class="label-row"><label for="volume">Room volume</label><output id="volume-value" for="volume">48%</output></div>
+          <input id="volume" type="range" min="0" max="100" value="48">
+        </div>
+        <div class="two-up">
+          <div class="slider-field">
+            <div class="label-row"><label for="house">House lights</label><output id="house-value" for="house">72%</output></div>
+            <input id="house" type="range" min="0" max="100" value="72">
+          </div>
+          <div class="slider-field">
+            <div class="label-row"><label for="spotlight">Spotlight</label><output id="spotlight-value" for="spotlight">80%</output></div>
+            <input id="spotlight" type="range" min="0" max="100" value="80">
+          </div>
+        </div>
+        <label class="check-row"><input id="countdown" type="checkbox" checked> Show countdown on the back wall</label>
+        <div class="seed-field field">
+          <label for="seed">Rehearsal seed <span class="field-help">repeat a crowd</span></label>
+          <div class="seed-row"><input id="seed" type="text" maxlength="64" autocomplete="off" spellcheck="false"><button id="new-seed" class="subtle-button" type="button" title="Generate a new crowd">New crowd</button></div>
+        </div>
+        <details class="advanced">
+          <summary>Test settings · seats and duration</summary>
+          <div class="two-up">
+            <div class="field"><label for="fill">Occupied seats (15–30)</label><input id="fill" type="number" min="15" max="30" step="1" value="20"></div>
+            <div class="field"><label for="minutes">Minutes (1–10)</label><input id="minutes" type="number" min="1" max="10" step="1" value="5"></div>
+          </div>
+        </details>
+      </div>
+
+      <div class="setup-actions">
+        <button id="enter-vr" type="button" class="primary-button" disabled>
+          Enter VR <span aria-hidden="true">↗</span>
+        </button>
+        <button id="start-desktop" type="button" class="secondary-button" disabled>Start on desktop <span aria-hidden="true">→</span></button>
+        <p id="setup-status" class="setup-status" role="status">Loading the room…</p>
+      </div>
+      <p class="safety-note">Stand in a clear space with both controllers. Hold both grips for 1 second to exit VR at any time. Your microphone stays on-device; nothing is recorded or sent.</p>
+    </section>
+    <aside class="preview-caption" aria-label="Live preview details">
+      <span class="preview-label"><span class="status-dot"></span> LIVE ROOM PREVIEW</span>
+      <strong>The Back Room</strong>
+      <span id="preview-fill">20 people · 30 seats</span>
+      <span class="preview-sub">Original low-poly venue · synthesised sound placeholders</span>
+    </aside>
+  </main>
+
+  <section id="desktop-hud" hidden aria-label="Desktop rehearsal controls">
+    <div class="hud-top">
+      <div class="hud-info">
+        <span class="hud-brand"><span class="status-dot"></span> STAGE TIME <span class="faint">/ THE BACK ROOM</span></span>
+        <div class="hud-state">
+          <strong id="hud-time" aria-label="Time remaining">5:00</strong>
+          <div><span id="hud-state-text" class="state-tag">READY</span><span id="hud-mode" class="mode-tag">TIMED</span></div>
+        </div>
+        <p id="hud-prompt">Press Space when you are ready.</p>
+      </div>
+      <div class="hud-actions">
+        <button id="desktop-debug" type="button" class="hud-button">D · Debug</button>
+        <button id="desktop-exit" type="button" class="hud-button">Return to setup</button>
+      </div>
+    </div>
+    <aside id="debug-panel" class="debug-panel" hidden aria-label="Technical overlay">
+      <div class="debug-heading"><span>TECHNICAL OVERLAY</span><span> D TOGGLE </span></div>
+      <pre id="debug-text"></pre>
+    </aside>
+    <div class="hud-bottom">
+      <div class="hud-event"><span>LAST EVENT</span><strong id="last-event">Ready</strong><span id="sound-label" class="faint">Synthesised placeholders</span></div>
+      <div class="hud-buttons">
+        <button id="desktop-start-stop" class="primary-button compact" type="button">Start set <kbd>Space</kbd></button>
+        <div class="reaction-buttons" aria-label="Manual reactions">
+          <button type="button" data-reaction="laugh" class="hud-button"><kbd>L</kbd> Laugh</button>
+          <button type="button" data-reaction="titter" class="hud-button"><kbd>T</kbd> Titter</button>
+          <button type="button" data-reaction="ripple" class="hud-button"><kbd>R</kbd> Ripple</button>
+          <button type="button" data-reaction="applause" class="hud-button"><kbd>P</kbd> Applause</button>
+          <button type="button" data-reaction="cough" class="hud-button"><kbd>C</kbd> Cough</button>
+        </div>
+        <div class="hud-volume"><label for="desktop-volume">VOL <span id="hud-volume-value">48%</span></label><input id="desktop-volume" type="range" min="0" max="100" value="48"></div>
+      </div>
+      <p class="look-hint">Click the room to look around · Esc releases the mouse · + / − volume</p>
+    </div>
+  </section>
+  <div id="notice" class="notice" role="status" hidden></div>
+  <script type="module">
+    import('./main.js').catch(error => {
+      const status = document.getElementById('setup-status');
+      if (status) status.textContent = 'Unable to load the 3D room. Refresh and check your connection. ' + (error?.message || '');
+      console.error('Stage Time could not initialise:', error);
+    });
+  </script>
+</body>
+</html>
