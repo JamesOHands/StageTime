@@ -17,7 +17,7 @@
     }
   </script>
 </head>
-<body data-view="entry" data-state="ready" data-mode="timed">
+<body data-view="entry" data-state="ready" data-mode="timed" data-build="20261122.2">
   <canvas id="scene" tabindex="0" aria-label="The Back Room, a three-dimensional pub comedy room viewed from the stage"></canvas>
   <div id="setup-backdrop" aria-hidden="true"></div>
 
@@ -129,7 +129,7 @@
   </section>
   <div id="notice" class="notice" role="status" hidden></div>
   <script type="module">
-    import('./main.js').catch(error => {
+    import('./main.js?v=20261122.2').catch(error => {
       const status = document.getElementById('setup-status');
       if (status) status.textContent = 'Unable to load the 3D room. Refresh and check your connection. ' + (error?.message || '');
       console.error('Stage Time could not initialise:', error);
