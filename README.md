@@ -52,12 +52,16 @@ GitHub Pages publishes from the `main` branch, root folder. Anything pushed to `
 
 Every third-party asset (sound, model, texture, font) must be listed here before it is committed. No streamed specials or ripped audio.
 
+Shared audio goes in `/assets/audio/`, used by both builds.
+
+**Recordings of real people:** because this repo is public, anyone recorded (including friends) must agree to their audio being **publicly distributed**, not just recorded. Note their consent in the table below. Your own voice is fine.
+
 | File | Source | Author | Licence | Notes |
 |---|---|---|---|---|
-| — | — | — | — | No third-party assets yet |
+| — | — | — | — | No third-party assets yet. Builds use synthesised placeholders. |
 
 ## Third-party code
 
 | Library | Version | Licence | How it's loaded |
 |---|---|---|---|
-| Three.js | to be pinned at build time | MIT | see SPEC.md |
+| Three.js (+ add-ons) | 0.187.0 | MIT | Import map → jsDelivr, exact version (see SPEC.md §3) |

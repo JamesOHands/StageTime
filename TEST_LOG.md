@@ -1,5 +1,7 @@
 # Test log
 
+**This file is public.** Technical results only. Never record any of your set, and keep personal notes about nerves or how a rehearsal went somewhere private.
+
 Two kinds of test, always labelled:
 
 - **Desktop / assistant:** run in a desktop browser or emulator, either by an assistant or by James. These prove the code runs. They do **not** prove presence, comfort or headset performance.
@@ -15,18 +17,17 @@ Test IDs refer to the acceptance tests in SPEC.md.
 
 ## Headset session template
 
-Copy this block for each headset session. Keep it brief. **Do not write any of your set here**: this file is public.
+Copy this block for each headset session.
 
 ```
 ### YYYY-MM-DD — <build> @ <commit> — <Quest 2 / Quest 3 / Quest 3S>
 
-Tests: H1 ☐ H2 ☐ H3 ☐ H4 ☐ H5 ☐ H6 ☐ H7 ☐
+Tests: H1 ☐ H2 ☐ H3 ☐ H4 ☐ H5a ☐ H5b ☐ H6 ☐ H7 ☐
 
-- Frame rate (debug overlay, lowest seen):
+- Refresh rate shown / lowest fps seen:
 - Mic mode used (mic / timed / manual):
-- Felt watched? (1 = not at all, 5 = completely):
-- Nerves before / after (1–5):
-- Comfort issues (dizziness, discomfort, disorientation):
+- H7 — felt watched? (yes / partly / no):
+- Comfort issues (judder, dizziness, wrong height or scale):
 - Audio: directional? repetitive? too loud/quiet?
 - Bugs / errors shown in overlay:
 - What would most improve presence:

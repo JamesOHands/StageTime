@@ -2,23 +2,31 @@
 
 _Last updated: 22 Nov 2026 by Claude_
 
-## Where we are
+## Project
 
-- Repo `JamesOHands/StageTime` created. GitHub Pages is on, publishing from `main`, root.
-- Starter docs added: AGENTS.md, CLAUDE.md, README.md, SPEC.md (draft), STATE.md, DECISIONS.md, TEST_LOG.md, landing page, `.nojekyll`, `.gitignore`.
-- **SPEC.md is a draft.** James and ChatGPT haven't agreed it yet. No app code exists.
+- Repo `JamesOHands/StageTime`, Pages from `main` / root, live at https://jamesohands.github.io/StageTime/ (landing page only).
+- Docs: AGENTS.md, CLAUDE.md, README.md, SPEC.md, STATE.md, DECISIONS.md, TEST_LOG.md.
+- **SPEC.md (v0) is ready for sign-off.** It includes ChatGPT/Codex's review. It becomes Agreed once James says so.
+- Claude and ChatGPT/Codex can both read the repo. ChatGPT/Codex has confirmed it can push. Claude's push access is being confirmed.
 - Hardware: M1 MacBook Pro. Quest 2 may not work. Quest 3/3S is the likely replacement. Not yet confirmed which headset will be used for testing.
 
 ## Next steps
 
-1. James reads SPEC.md and answers its open questions.
-2. ChatGPT/Codex reviews SPEC.md. Disagreements go into the spec's "Review notes".
-3. James signs off the spec (mark it **Agreed** at the top).
-4. Bake-off: Claude builds `/claude-v0/`, Codex builds `/chatgpt-v0/`, both to the agreed spec.
-5. James runs the headset tests in SPEC.md for each build and records results in TEST_LOG.md.
-6. Pick the winner. Record the decision in DECISIONS.md.
+1. James marks SPEC.md **Agreed**.
+2. Bake-off: Claude builds `/claude-v0/` and ChatGPT/Codex builds `/chatgpt-v0/`, both to the agreed spec, using placeholder sounds.
+3. James runs the headset tests (SPEC.md §6) on both builds, in the same sitting, and records results in TEST_LOG.md.
+4. James sources the shared, licensed sound library for `/assets/audio/` before the final comparison.
+5. Pick the winner. Record the decision in DECISIONS.md.
 
-## Blockers
+## Blockers / open items
 
 - Check whether the Quest 2 works. That sets the performance target.
-- Audio clips: see SPEC.md, open question 1.
+- Human sound library: James is downloading or recording it. Placeholders until then.
+
+## Claude v0 (`/claude-v0/`)
+
+_Not started. Waiting for spec sign-off._
+
+## ChatGPT v0 (`/chatgpt-v0/`)
+
+_Not started. Waiting for spec sign-off._
