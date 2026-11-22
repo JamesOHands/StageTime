@@ -1,6 +1,6 @@
 # SPEC — v0 Presence Prototype
 
-**Status: READY FOR SIGN-OFF.** Claude drafted this on 22 Nov 2026 and revised it after ChatGPT/Codex's review the same day (see §7). It becomes **Agreed** when James says so. After that, both bake-off builds follow it, and changes need James's approval.
+**Status: AGREED** by James on 22 Nov 2026, after ChatGPT/Codex's review (see §7). Both bake-off builds follow this spec. Changes need James's approval.
 
 All numbers below are **starting values**, to be tuned once James has tried a working build in the headset.
 
@@ -239,4 +239,4 @@ TEST_LOG.md is public, so it holds technical results only. Keep any personal not
 - *22 Nov 2026, Claude:*
   - Releasing the mic on every *stop* (not just on exit) is allowed only if getting it back doesn't re-prompt invisibly inside VR. A hidden permission prompt in the headset would break the session.
   - H7 keeps one presence answer (yes / partly / no), because it's the v0 success criterion. Personal notes stay private.
-- *22 Nov 2026, James:* nothing to add. Will tune values after trying a working build.
+- *22 Nov 2026, James:* nothing to add. Will tune values after trying a working build. **Agreed.**
