@@ -1,0 +1,14 @@
+# Private material must never be committed (see AGENTS.md → Privacy).
+# If you ever keep a local copy of a set, notes or recordings, put it in private/.
+private/
+*.private.*
+.env
+.env.*
+*.key
+*.pem
+
+# Local tooling
+node_modules/
+.DS_Store
+.vscode/
+.idea/
