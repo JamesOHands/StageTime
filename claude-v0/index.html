@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stage Time — Claude v0</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"
+    }
+  }
+  </script>
+  <style>
+    :root { color-scheme: dark; --ink: #f3ead9; --muted: #b9ad98; --accent: #ffd27a; --panel: rgba(16, 12, 10, 0.9); }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #060405; color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    #scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+    #panel {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: min(36rem, 94vw); max-height: 94vh; overflow-y: auto;
+      background: var(--panel); border: 1px solid #3a2e24; border-radius: 14px;
+      padding: 1.4rem 1.6rem; box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    }
+    h1 { margin: 0; font-size: 2rem; letter-spacing: 0.01em; }
+    .sub { margin: 0.1rem 0 1rem; color: var(--muted); }
+    #status { margin: 0 0 1rem; color: var(--accent); font-size: 0.95rem; }
+    fieldset { border: 1px solid #3a2e24; border-radius: 10px; margin: 0 0 1rem; padding: 0.8rem 1rem 0.9rem; }
+    legend { padding: 0 0.4rem; color: var(--muted); font-size: 0.9rem; }
+    .row { display: grid; grid-template-columns: 9rem 1fr auto; align-items: center; gap: 0.7rem; margin: 0.45rem 0; }
+    .row label { color: var(--muted); }
+    input[type="range"] { width: 100%; }
+    input[type="text"], input[type="number"], select { background: #1d1712; color: var(--ink); border: 1px solid #4a3a2c; border-radius: 6px; padding: 0.4rem 0.5rem; font-size: 1rem; }
+    .modes { display: flex; gap: 1.2rem; flex-wrap: wrap; }
+    .note { color: var(--muted); font-size: 0.85rem; margin: 0.4rem 0 0; }
+    button { font: inherit; border-radius: 10px; border: 0; padding: 0.75rem 1.1rem; cursor: pointer; }
+    button:disabled { opacity: 0.45; cursor: default; }
+    .primary { background: var(--accent); color: #1a120a; font-weight: 700; font-size: 1.25rem; padding: 1rem 1.4rem; }
+    .secondary { background: #2d241c; color: var(--ink); }
+    .actions { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 0.4rem; }
+    .actions .primary { flex: 1 1 14rem; }
+    #vr-note { color: #ffb4a6; min-height: 1.2em; }
+    details { margin-top: 1rem; color: var(--muted); }
+    summary { cursor: pointer; }
+    table { border-collapse: collapse; width: 100%; margin-top: 0.5rem; font-size: 0.9rem; }
+    td, th { border-bottom: 1px solid #2f261e; padding: 0.3rem 0.4rem; text-align: left; }
+    #menu-btn { position: fixed; top: 1rem; left: 1rem; background: rgba(20,16,12,0.85); color: var(--ink); }
+    #hint { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); background: rgba(10,8,6,0.75); padding: 0.5rem 0.9rem; border-radius: 8px; color: var(--muted); font-size: 0.9rem; white-space: nowrap; }
+    #debug { position: fixed; top: 1rem; right: 1rem; margin: 0; background: rgba(8,10,14,0.85); color: #e8f0e8; padding: 0.7rem 0.9rem; border-radius: 8px; font: 13px/1.45 ui-monospace, Menlo, monospace; white-space: pre; }
+    #fatal { position: fixed; inset: auto 1rem 1rem 1rem; background: #5a1414; color: #fff; padding: 1rem; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+
+  <div id="panel">
+    <h1>Stage Time</h1>
+    <p class="sub">Claude v0 · presence prototype</p>
+    <p id="status">Loading…</p>
+
+    <fieldset>
+      <legend>Microphone (optional)</legend>
+      <button id="mic-btn" class="secondary" type="button">Enable microphone</button>
+      <p class="note" id="mic-status">Off.</p>
+      <p class="note">Used only to notice when you pause. Analysed on this device, never recorded or sent. Without it, the crowd reacts on a timer.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Reactions</legend>
+      <div class="modes">
+        <label><input type="radio" name="mode" value="mic"> After pauses (mic)</label>
+        <label><input type="radio" name="mode" value="timed"> On a timer</label>
+        <label><input type="radio" name="mode" value="manual"> Buttons only</label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Room</legend>
+      <div class="row"><label for="fill">Audience</label><input id="fill" type="range" min="15" max="30" step="1"><span id="fill-out"></span></div>
+      <div class="row"><label for="volume">Volume</label><input id="volume" type="range" min="0" max="100" step="5"><span id="volume-out"></span></div>
+      <div class="row"><label for="house">House lights</label><input id="house" type="range" min="0" max="100" step="5"><span></span></div>
+      <div class="row"><label for="spot">Spotlight</label><input id="spot" type="range" min="0" max="150" step="5"><span></span></div>
+      <div class="row"><label for="minutes">Set length (min)</label><input id="minutes" type="number" min="1" max="10" step="1"><span></span></div>
+      <div class="row"><label for="countdown">Countdown</label><input id="countdown" type="checkbox"><span></span></div>
+      <div class="row"><label for="mic-hand">Handheld mic</label>
+        <select id="mic-hand"><option value="right">Right hand</option><option value="left">Left hand</option><option value="none">None (use the stand)</option></select><span></span></div>
+      <div class="row"><label for="seed">Seed</label><input id="seed" type="text" inputmode="numeric"><button id="new-seed" class="secondary" type="button">New</button></div>
+      <p class="note">Same seed = same audience and timings. A new seed each time gives variety.</p>
+    </fieldset>
+
+    <div class="actions">
+      <button id="enter-vr" class="primary" type="button">Enter VR</button>
+      <button id="start-desktop" class="secondary" type="button">Start on desktop</button>
+    </div>
+    <p id="vr-note" class="note"></p>
+
+    <details>
+      <summary>Controls</summary>
+      <table>
+        <tr><th>Action</th><th>Quest</th><th>Desktop</th></tr>
+        <tr><td>Start / stop set</td><td>Hold right stick press 1 s</td><td>Space</td></tr>
+        <tr><td>Laugh / titter</td><td>A / B</td><td>L / T</td></tr>
+        <tr><td>Applause / cough</td><td>X / Y</td><td>P / C</td></tr>
+        <tr><td>Debug overlay</td><td>Left stick press</td><td>D</td></tr>
+        <tr><td>Volume</td><td>Right stick up / down</td><td>+ / −</td></tr>
+        <tr><td>Exit VR</td><td>Hold both grips 1 s</td><td>Menu button</td></tr>
+        <tr><td>Look around</td><td>Your head</td><td>Click, then move the mouse (Esc releases)</td></tr>
+      </table>
+      <p class="note">The Meta button always works as an emergency exit.</p>
+    </details>
+  </div>
+
+  <button id="menu-btn" type="button" hidden>Menu</button>
+  <div id="hint" hidden>Click to look around · Space start/stop · L T P C reactions · D debug · Esc releases mouse</div>
+  <pre id="debug" hidden></pre>
+  <div id="fatal" hidden></div>
+
+  <script>
+    window.addEventListener('error', function (e) {
+      if (e.target && e.target.tagName === 'SCRIPT') {
+        var f = document.getElementById('fatal');
+        f.hidden = false;
+        f.textContent = "Couldn't load the app (the 3D engine comes from the internet). Check your connection and reload.";
+      }
+    }, true);
+  </script>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

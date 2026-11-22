@@ -6,7 +6,7 @@ A VR stand-up crowd simulator: a private rehearsal tool for getting used to bein
 
 | Build | URL | Status |
 |---|---|---|
-| Claude v0 | https://jamesohands.github.io/StageTime/claude-v0/ | Not built yet |
+| Claude v0 | https://jamesohands.github.io/StageTime/claude-v0/ | Ready for headset test (22 Nov 2026) — see `claude-v0/README.md` |
 | ChatGPT v0 | https://jamesohands.github.io/StageTime/chatgpt-v0/ | Not built yet |
 
 ## What's in this repo
@@ -52,7 +52,7 @@ GitHub Pages publishes from the `main` branch, root folder. Anything pushed to `
 
 Every third-party asset (sound, model, texture, font) must be listed here before it is committed. No streamed specials or ripped audio.
 
-Shared audio goes in `/assets/audio/`, used by both builds.
+Shared audio goes in `/assets/audio/`, used by both builds. `/assets/audio/README.md` explains the folder layout and the `manifest.json` format.
 
 **Recordings of real people:** because this repo is public, anyone recorded (including friends) must agree to their audio being **publicly distributed**, not just recorded. Note their consent in the table below. Your own voice is fine.
 
